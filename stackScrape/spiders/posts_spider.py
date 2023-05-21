@@ -8,60 +8,58 @@ class PostsSpider(scrapy.Spider):
     start_urls = [
         "https://stackoverflow.com/questions?tab=frequent&page=2"
     ]
-
-    def __init__(self, *args, **kwargs):
-        super(PostsSpider, self).__init__(*args, **kwargs)
-        self.dataPoints = 0
-        self.fileCounter = 1
-        self.links = []
-        self.titles = []
-        self.questions = []
-        self.answers = []
+    dataPoints = 0
+    fileCounter = 1
+    links = []
+    titles = []
+    questions = []
+    answers = []
 
     def parse(self, response):
         print("Inside parsing", response)
         question_links = response.css('div.flush-left div.s-post-summary.js-post-summary '
                                       'h3.s-post-summary--content-title a::attr(href)').getall()
-        self.links.extend(question_links)
+        PostsSpider.links.extend(question_links)
 
         question_titles = response.css('div.flush-left div.s-post-summary.js-post-summary '
                                        'h3.s-post-summary--content-title a::text').getall()
-        self.titles.extend(question_titles)
+        PostsSpider.titles.extend(question_titles)
 
         for link in question_links:
             print("Going For --> ",  link)
             yield response.follow(link, callback=self.parse_content)
 
-        if self.dataPoints >= 5000:
-            data = pd.DataFrame(data=np.array([self.links, self.titles, self.questions, self.answers]).T,
-                                columns=['post_link', 'post_title', 'post_question', 'post_answer'])
-            data.to_pickle('stackoverflow-' + str(self.fileCounter) + '.pkl')
-            self.fileCounter += 1
-            self.dataPoints = 0
-            self.links.clear()
-            self.titles.clear()
-            self.questions.clear()
-            self.answers.clear()
+        # if self.dataPoints >= 5:
+        #     data = pd.DataFrame(data=np.array([PostsSpider.links, PostsSpider.titles, PostsSpider.questions, PostsSpider.answers]).T,
+        #                         columns=['post_link', 'post_title', 'post_question', 'post_answer'])
+        #     data.to_pickle('stackoverflow-' + str(self.fileCounter) + '.pkl')
+        #     PostsSpider.fileCounter += 1
+        #     PostsSpider.dataPoints = 0
+        #     PostsSpider.links.clear()
+        #     PostsSpider.titles.clear()
+        #     PostsSpider.questions.clear()
+        #     PostsSpider.answers.clear()
 
-        if PostsSpider.page < 252:
+        if PostsSpider.page < 52:
             PostsSpider.page += 1
             yield response.follow("https://stackoverflow.com/questions?tab=frequent&page=" + str(PostsSpider.page),
                                   callback=self.parse)
 
     def parse_content(self, response):
-        print("Inside content parsing", response)
+        print("Inside content parsing", PostsSpider.dataPoints)
 
-        self.dataPoints += 1
+        PostsSpider.dataPoints += 1
 
         post_question = " ".join(response.css('div.question.js-question div.post-layout div.s-prose.js-post-body '
                                               'p::text').getall())
         post_answer = " ".join(response.css('div.answer.js-answer.accepted-answer.js-accepted-answer '
                                             'div.answercell.post-layout--right div.s-prose.js-post-body '
                                             'p::text').getall())
-        self.questions.append(post_question)
-        self.answers.append(post_answer)
+        # print(post_question)
+        PostsSpider.questions.append(post_question)
+        PostsSpider.answers.append(post_answer)
 
     def closed(self, reason):
-        data = pd.DataFrame(data=np.array([self.links, self.titles, self.questions, self.answers]).T,
+        data = pd.DataFrame(data=np.array([PostsSpider.links, PostsSpider.titles, PostsSpider.questions, PostsSpider.answers]).T,
                             columns=['post_link', 'post_title', 'post_question', 'post_answer'])
-        data.to_pickle('stackoverflow-' + str(self.fileCounter) + '.pkl')
+        data.to_pickle('stackoverflow-' + str(PostsSpider.fileCounter) + '.pkl')

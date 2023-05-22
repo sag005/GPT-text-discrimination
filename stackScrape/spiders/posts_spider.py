@@ -29,7 +29,7 @@ class PostsSpider(scrapy.Spider):
             print("Going For --> ",  link)
             yield response.follow(link, callback=self.parse_content)
 
-        if len(PostsSpider.links) > 500 and len(PostsSpider.titles) > 500 and len(PostsSpider.questions) > 500 and len(PostsSpider.answers) > 500:
+        if len(PostsSpider.links) > PostsSpider.fileCounter * 500 and len(PostsSpider.titles) > PostsSpider.fileCounter * 500 and len(PostsSpider.questions) > PostsSpider.fileCounter * 500 and len(PostsSpider.answers) > PostsSpider.fileCounter * 500:
             start = 10 * (PostsSpider.fileCounter - 1)
             end = 10 * PostsSpider.fileCounter
             data = pd.DataFrame(data=np.array([PostsSpider.links[start:end], PostsSpider.titles[start:end], PostsSpider.questions[start:end], PostsSpider.answers[start:end]]).T,

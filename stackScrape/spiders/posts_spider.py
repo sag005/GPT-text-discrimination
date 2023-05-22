@@ -8,7 +8,6 @@ class PostsSpider(scrapy.Spider):
     start_urls = [
         "https://stackoverflow.com/questions?tab=frequent&page=2"
     ]
-    dataPoints = 0
     fileCounter = 1
     links = []
     titles = []
@@ -29,23 +28,22 @@ class PostsSpider(scrapy.Spider):
             print("Going For --> ",  link)
             yield response.follow(link, callback=self.parse_content)
 
-        if len(PostsSpider.links) > PostsSpider.fileCounter * 500 and len(PostsSpider.titles) > PostsSpider.fileCounter * 500 and len(PostsSpider.questions) > PostsSpider.fileCounter * 500 and len(PostsSpider.answers) > PostsSpider.fileCounter * 500:
-            start = 10 * (PostsSpider.fileCounter - 1)
-            end = 10 * PostsSpider.fileCounter
+        print("Filecounter", PostsSpider.fileCounter)
+
+        if len(PostsSpider.links) > (PostsSpider.fileCounter * 100) and len(PostsSpider.titles) > (PostsSpider.fileCounter * 100) and len(PostsSpider.questions) > (PostsSpider.fileCounter * 100) and len(PostsSpider.answers) > (PostsSpider.fileCounter * 100):
+            start = 100 * (PostsSpider.fileCounter - 1)
+            end = 100 * PostsSpider.fileCounter
             data = pd.DataFrame(data=np.array([PostsSpider.links[start:end], PostsSpider.titles[start:end], PostsSpider.questions[start:end], PostsSpider.answers[start:end]]).T,
                                 columns=['post_link', 'post_title', 'post_question', 'post_answer'])
             data.to_pickle('stackoverflow-' + str(self.fileCounter) + '.pkl')
             PostsSpider.fileCounter += 1
 
-        if PostsSpider.page < 60:
+        if PostsSpider.page < 600:
             PostsSpider.page += 1
             yield response.follow("https://stackoverflow.com/questions?tab=frequent&page=" + str(PostsSpider.page),
                                   callback=self.parse)
 
     def parse_content(self, response):
-        print("Inside content parsing", PostsSpider.dataPoints)
-
-        PostsSpider.dataPoints += 1
 
         post_question = " ".join(response.css('div.question.js-question div.post-layout div.s-prose.js-post-body '
                                               'p::text').getall())
@@ -57,7 +55,7 @@ class PostsSpider(scrapy.Spider):
         PostsSpider.answers.append(post_answer)
 
     def closed(self, reason):
-        start = 10 * (PostsSpider.fileCounter - 1)
+        start = 100 * (PostsSpider.fileCounter - 1)
         data = pd.DataFrame(data=np.array([PostsSpider.links[start:], PostsSpider.titles[start:], PostsSpider.questions[start:], PostsSpider.answers[start:]]).T,
                             columns=['post_link', 'post_title', 'post_question', 'post_answer'])
         data.to_pickle('stackoverflow-' + str(self.fileCounter) + '.pkl')

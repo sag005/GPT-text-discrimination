@@ -29,18 +29,15 @@ class PostsSpider(scrapy.Spider):
             print("Going For --> ",  link)
             yield response.follow(link, callback=self.parse_content)
 
-        # if self.dataPoints >= 5:
-        #     data = pd.DataFrame(data=np.array([PostsSpider.links, PostsSpider.titles, PostsSpider.questions, PostsSpider.answers]).T,
-        #                         columns=['post_link', 'post_title', 'post_question', 'post_answer'])
-        #     data.to_pickle('stackoverflow-' + str(self.fileCounter) + '.pkl')
-        #     PostsSpider.fileCounter += 1
-        #     PostsSpider.dataPoints = 0
-        #     PostsSpider.links.clear()
-        #     PostsSpider.titles.clear()
-        #     PostsSpider.questions.clear()
-        #     PostsSpider.answers.clear()
+        if len(PostsSpider.links) > 500 and len(PostsSpider.titles) > 500 and len(PostsSpider.questions) > 500 and len(PostsSpider.answers) > 500:
+            start = 10 * (PostsSpider.fileCounter - 1)
+            end = 10 * PostsSpider.fileCounter
+            data = pd.DataFrame(data=np.array([PostsSpider.links[start:end], PostsSpider.titles[start:end], PostsSpider.questions[start:end], PostsSpider.answers[start:end]]).T,
+                                columns=['post_link', 'post_title', 'post_question', 'post_answer'])
+            data.to_pickle('stackoverflow-' + str(self.fileCounter) + '.pkl')
+            PostsSpider.fileCounter += 1
 
-        if PostsSpider.page < 52:
+        if PostsSpider.page < 60:
             PostsSpider.page += 1
             yield response.follow("https://stackoverflow.com/questions?tab=frequent&page=" + str(PostsSpider.page),
                                   callback=self.parse)
@@ -60,6 +57,7 @@ class PostsSpider(scrapy.Spider):
         PostsSpider.answers.append(post_answer)
 
     def closed(self, reason):
-        data = pd.DataFrame(data=np.array([PostsSpider.links, PostsSpider.titles, PostsSpider.questions, PostsSpider.answers]).T,
+        start = 10 * (PostsSpider.fileCounter - 1)
+        data = pd.DataFrame(data=np.array([PostsSpider.links[start:], PostsSpider.titles[start:], PostsSpider.questions[start:], PostsSpider.answers[start:]]).T,
                             columns=['post_link', 'post_title', 'post_question', 'post_answer'])
-        data.to_pickle('stackoverflow-' + str(PostsSpider.fileCounter) + '.pkl')
+        data.to_pickle('stackoverflow-' + str(self.fileCounter) + '.pkl')

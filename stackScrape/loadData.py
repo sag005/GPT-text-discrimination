@@ -15,7 +15,7 @@ RATE_LIMIT_PERIOD = 60  # Time period in seconds
 
 
 
-file_path = 'merged_stackoverflow_18_34'
+file_path = 'merged_stackoverflow_35_54'
 
 df = pd.read_pickle(file_path + '.pkl')
 column_to_check = 'post_answer'  # Replace 'column_name' with the actual column name
@@ -134,7 +134,7 @@ def get_answers(df):
         with tqdm(total=len(df)) as pbar:
             for result in executor.map(get_completion, rows):
                 pbar.update(1)
-                df_new.to_csv('merged_stackoverflow_18_34_Answers.csv', index=False)
+                df_new.to_csv('merged_stackoverflow_35_54_Answers.csv', index=False)
 
 
 
